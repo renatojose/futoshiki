@@ -20,6 +20,11 @@ void atualizaPossibilidadeCampo(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanh
 
     //Percorrer todos os elementos da mesma coluna
     for(i=0;i<tamanhoTabuleiro;++i){
+            futoshiki[indiceLinha][indiceColuna].numerosPossiveis[i] = 0;
+    }
+
+    //Percorrer todos os elementos da mesma coluna
+    for(i=0;i<tamanhoTabuleiro;++i){
         if(futoshiki[i][indiceColuna].valor != 0){
             futoshiki[indiceLinha][indiceColuna].numerosPossiveis[futoshiki[i][indiceColuna].valor-1] = 1;
         }
@@ -96,31 +101,62 @@ void preencheRestricoes(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabulei
     }
 }
 
+bool verificaRestricao(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro], int indiceLinha , int indiceColuna, int valorCampo){
+    int k;
+    valorCampo += 1;
+
+        for(k=0;k<4;++k){
+            if(futoshiki[indiceLinha][indiceColuna].restricoes[k][0] != 0){
+                if(futoshiki[indiceLinha][indiceColuna].restricoes[k][2] == 0 && futoshiki[futoshiki[indiceLinha][indiceColuna].restricoes[k][0]][futoshiki[indiceLinha][indiceColuna].restricoes[k][1]].valor != 0){
+                    if(valorCampo > futoshiki[futoshiki[indiceLinha][indiceColuna].restricoes[k][0]][futoshiki[indiceLinha][indiceColuna].restricoes[k][1]].valor){
+                        return false;
+                    }
+                }else if (futoshiki[indiceLinha][indiceColuna].restricoes[k][2] == 1 && futoshiki[futoshiki[indiceLinha][indiceColuna].restricoes[k][0]][futoshiki[indiceLinha][indiceColuna].restricoes[k][1]].valor !=0){
+                    if(valorCampo < futoshiki[futoshiki[indiceLinha][indiceColuna].restricoes[k][0]][futoshiki[indiceLinha][indiceColuna].restricoes[k][1]].valor){
+                        return false;
+                    }
+                }
+            }
+        }
+
+    return true;
+}
+
 bool backtrackingSemPoda(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro]){
     int i, j, k;
     bool retorno;//Irá receber o retorno desta função, podendo ser true, se ocorreu sucesso na chamada ou false se ocorreu falha.
+
+    for(k=0; k<tamanhoTabuleiro; ++k){//percorre a linha do tabuleiro
+            for(j=0; j<tamanhoTabuleiro; ++j){//percorre a coluna do tabuleiro
+                printf("%d ", futoshiki[k][j].valor);
+            }
+            printf("\n");
+        }
 
     //Primeiro Passo: Verificar se há alguum campo em branco no tabuleiro.
     for(i=0; i<tamanhoTabuleiro; ++i){
         for(j=0; j<tamanhoTabuleiro; ++j){
             if(futoshiki[i][j].valor == 0){ //Inserirá no campo que ainda nao tem valor, ou seja, valor=0.
+                atualizaPossibilidadeCampo(tamanhoTabuleiro, futoshiki, i, j);//iremos verificar quais números possíveis a serem colocados no campo, percorrendo toda a mesma linha e coluna do campo.
                 for(k=0;k<tamanhoTabuleiro;++k){//loop para verificar todos os números possíveisp para colocar.
-                    atualizaPossibilidadeCampo(tamanhoTabuleiro, futoshiki, i, j);//iremos verificar quais números possíveis a serem colocados no campo, percorrendo toda a mesma linha e coluna do campo.
-                    //IMPRIMIR O VETOR DE POSSIBILIDADE
-                    if(futoshiki[i][j].numerosPossiveis[k]==0){
+                    if(futoshiki[i][j].numerosPossiveis[k]==0 && verificaRestricao(tamanhoTabuleiro, futoshiki, i , j, k)){
                         futoshiki[i][j].valor = k+1;
                         futoshiki[i][j].numerosPossiveis[k] = 1; //Atualiza que o número k+1 não pode ser colocado mais no campo, se o backtracking falhar.
+                        printf("valor:%d, nposs:%d\n", futoshiki[i][j].valor,  futoshiki[i][j].numerosPossiveis[k]);
+                        //return true;
                         retorno = backtrackingSemPoda(tamanhoTabuleiro, futoshiki);
                         if(retorno == true){
                             return true;
                         }
                         futoshiki[i][j].valor = 0; //Retira o valor que estava atribuído ao campo.
+
                     }
                 }
                 return false;//Retorna falso, pois não foi possível inserir nenhum número no campo.
             }
         }
     }
+    return true;
 }
 
 int main(){
@@ -141,12 +177,12 @@ int main(){
         //backtracking();//backtracking com mvr e verificação adiante.
         //backtracking();//backtracking com verificação adiante.
 
-        for(k=0; k<tamanhoTabuleiro; ++k){//percorre a linha do tabuleiro
+        /*for(k=0; k<tamanhoTabuleiro; ++k){//percorre a linha do tabuleiro
             for(j=0; j<tamanhoTabuleiro; ++j){//percorre a coluna do tabuleiro
                 printf("%d ", futoshiki[k][j].valor);
             }
             printf("\n");
-        }
+        }*/
 
         /*printf("------------------------\n");
         for(i=0; i<tamanhoTabuleiro; ++i){//percorre a linha do tabuleiro
