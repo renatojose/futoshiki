@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define BK 0 // Backtracking sem poda
 #define BKFC 1 // Backtracking com Forward Checking
@@ -52,42 +53,6 @@ bool verificaNumerosPossiveisPreenchidos(int tamanhoTabuleiro, FUTOSHIKI futoshi
         if(futoshiki[i][indiceColuna].valor == 0 && futoshiki[i][indiceColuna].numerosPossiveisPreenchidos == (tamanhoTabuleiro-1) && futoshiki[i][indiceColuna].numerosPossiveis[valorCampo-1] ==0){
             return false;
         }
-
-        //verifica restrições do campo
-        /*for(k=0; k<4; ++k){
-            if(futoshiki[i][indiceColuna].restricoes[k][0] != 0){
-                x2 = futoshiki[i][indiceColuna].restricoes[k][0];
-                y2 = futoshiki[i][indiceColuna].restricoes[k][1];
-                if(futoshiki[x2][y2].valor !=0){
-                    futoshiki[i][indiceColuna].restricoes[valorCampo-1] = 1;
-                    futoshiki[i][indiceColuna].numerosPossiveisPreenchidos++;
-                    for(j=0; j<tamanhoTabuleiro; ++j){
-                        if(futoshiki[i][indiceColuna].restricoes[k][2] == 0){
-                            if(futoshiki[i][indiceColuna].numerosPossiveis[j] == 0 && (j+1) >= futoshiki[x2][y2].valor){
-                                futoshiki[i][indiceColuna].numerosPossiveis[j] = 1;
-                                futoshiki[i][indiceColuna].numerosPossiveisPreenchidos++;
-                                if(futoshiki[i][indiceColuna].numerosPossiveisPreenchidos == tamanhoTabuleiro){
-                                    return false;
-                                }
-                            }
-                        }else{
-                            if(futoshiki[i][indiceColuna].numerosPossiveis[j] == 0 && (j+1) <= futoshiki[x2][y2].valor){
-                                futoshiki[i][indiceColuna].numerosPossiveis[j] = 1;
-                                futoshiki[i][indiceColuna].numerosPossiveisPreenchidos++;
-                                if(futoshiki[i][indiceColuna].numerosPossiveisPreenchidos == tamanhoTabuleiro){
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                    futoshiki[i][indiceColuna].restricoes[valorCampo-1] = 0;
-                    futoshiki[i][indiceColuna].numerosPossiveisPreenchidos--;
-                }
-            }else{
-                break;
-            }
-        }*/
-
     }
 
     //Percorrer todos os elementos da mesma linha
@@ -265,7 +230,7 @@ bool verificaRestricao(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleir
     return true;
 }
 
-bool backtrackingMVR(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro]){
+bool backtrackingMVR(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro], int *cont){
     int i, j, k, x, y, flag=0;
     bool retorno, possibilidade;//Irá receber o retorno desta função, podendo ser true, se ocorreu sucesso na chamada ou false se ocorreu falha.
 
@@ -287,7 +252,7 @@ bool backtrackingMVR(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro]
         }
     }
 
-    if(flag == 0){
+    if(flag == 0 || *cont > pow(10,6)){
         return true;
     }
 
@@ -305,7 +270,8 @@ bool backtrackingMVR(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro]
                 continue; //Serve para pular tudo que está abaixo daqui e passa para próxima interação do loop.
             }
             atualizaPossibilidadeCampoVerificacaoAdiante(tamanhoTabuleiro, futoshiki, x, y, k+1);
-            retorno = backtrackingMVR(tamanhoTabuleiro, futoshiki);
+            (*cont)++;
+            retorno = backtrackingMVR(tamanhoTabuleiro, futoshiki, cont);
             if(retorno == true){
                 return true;
             }
@@ -318,10 +284,13 @@ bool backtrackingMVR(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro]
     return false;//Retorna falso, pois não foi possível inserir nenhum número no campo.
 }
 
-bool backtrackingVerificaoAdiante(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro]){
+bool backtrackingVerificaoAdiante(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro], int *cont){
     int i, j, k;
     bool retorno, possibilidade;//Irá receber o retorno desta função, podendo ser true, se ocorreu sucesso na chamada ou false se ocorreu falha.
 
+    if(*cont > pow(10,6)){
+        return true;
+    }
     //Primeiro Passo: Verificar se há algum campo em branco no tabuleiro.
     for(i=0; i<tamanhoTabuleiro; ++i){
         for(j=0; j<tamanhoTabuleiro; ++j){
@@ -340,7 +309,8 @@ bool backtrackingVerificaoAdiante(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tama
                             continue; //Serve para pular tudo que está abaixo daqui e passa para próxima interação do loop.
                         }
                         atualizaPossibilidadeCampoVerificacaoAdiante(tamanhoTabuleiro, futoshiki, i, j, k+1);
-                        retorno = backtrackingVerificaoAdiante(tamanhoTabuleiro, futoshiki);
+                        (*cont)++;
+                        retorno = backtrackingVerificaoAdiante(tamanhoTabuleiro, futoshiki, cont);
                         if(retorno == true){
                             return true;
                         }
@@ -357,10 +327,13 @@ bool backtrackingVerificaoAdiante(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tama
     return true;
 }
 
-bool backtrackingSemPoda(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro]){
+bool backtrackingSemPoda(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabuleiro][tamanhoTabuleiro], int *cont){
     int i, j, k;
     bool retorno;//Irá receber o retorno desta função, podendo ser true, se ocorreu sucesso na chamada ou false se ocorreu falha.
 
+    if(*cont > pow(10,6)){
+       return true;
+    }
     //Primeiro Passo: Verificar se há alguum campo em branco no tabuleiro.
     for(i=0; i<tamanhoTabuleiro; ++i){
         for(j=0; j<tamanhoTabuleiro; ++j){
@@ -370,7 +343,8 @@ bool backtrackingSemPoda(int tamanhoTabuleiro, FUTOSHIKI futoshiki[tamanhoTabule
                     if(futoshiki[i][j].numerosPossiveis[k]==0 && verificaRestricao(tamanhoTabuleiro, futoshiki, i , j, k)){
                         futoshiki[i][j].valor = k+1;
                         futoshiki[i][j].numerosPossiveis[k] = 1; //Atualiza que o número k+1 não pode ser colocado mais no campo, se o backtracking falhar.
-                        retorno = backtrackingSemPoda(tamanhoTabuleiro, futoshiki);
+                        (*cont)++;
+                        retorno = backtrackingSemPoda(tamanhoTabuleiro, futoshiki, cont);
                         if(retorno == true){
                             return true;
                         }
@@ -389,6 +363,7 @@ int main(){
     //ler as variaveis
     int i, quantidadeJogos, tamanhoTabuleiro, quantidadeRestricoes, k, j, t;
     int opcao = BKFCMVR; //Na variável opcao, define-se o tipo de resolução que será escolhido de acordo com os DEFINES inseridos no começo do código.
+    int cont; //contador de quantidade de iterações
     scanf("%d\n", &quantidadeJogos);
 
     for(i=0; i< quantidadeJogos; ++i){
@@ -399,14 +374,15 @@ int main(){
         preencheTabuleiro(tamanhoTabuleiro, futoshiki);//inicializa tabuleiro
         preencheRestricoes(tamanhoTabuleiro, futoshiki, quantidadeRestricoes);//Preenche a tabela de restrições
 
+        cont = 0;
         if(opcao == BK){
-            backtrackingSemPoda(tamanhoTabuleiro, futoshiki);//backtracking sem heurística.
+            backtrackingSemPoda(tamanhoTabuleiro, futoshiki, &cont);//backtracking sem heurística.
         }else if(opcao == BKFC){
             incluiPossibilidadeComeco(tamanhoTabuleiro, futoshiki); //inclui as possibilidades nos campos com mesma linha e coluna que os campos que já contém os valores.
-            backtrackingVerificaoAdiante(tamanhoTabuleiro, futoshiki);//backtracking com mvr e verificação adiante.
+            backtrackingVerificaoAdiante(tamanhoTabuleiro, futoshiki, &cont);//backtracking com mvr e verificação adiante.
         }else if(opcao == BKFCMVR){
             incluiPossibilidadeComeco(tamanhoTabuleiro, futoshiki); //inclui as possibilidades nos campos com mesma linha e coluna que os campos que já contém os valores.
-            backtrackingMVR(tamanhoTabuleiro, futoshiki);//backtracking com verificação adiante
+            backtrackingMVR(tamanhoTabuleiro, futoshiki, &cont);//backtracking com verificação adiante
         }
 
         printf("%d\n", i+1);//imprime qual o número do jogo.
@@ -416,7 +392,9 @@ int main(){
             }
             printf("\n");
         }
+        //printf("\nQuantidade de chamadas recursivas: %d\n",cont);
         printf("\n");
+
     }
 
     return 0;
